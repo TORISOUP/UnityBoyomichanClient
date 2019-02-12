@@ -8,12 +8,12 @@ using UnityEngine;
 
 namespace UnityBoyomichanClient
 {
-    public class BoyomiClient
+    public class BoyomichanClient
     {
         private readonly string _host;
         private readonly int _port;
 
-        public BoyomiClient(string host, int port)
+        public BoyomichanClient(string host, int port)
         {
             _host = host;
             _port = port;
@@ -23,7 +23,7 @@ namespace UnityBoyomichanClient
         ///  棒読みちゃん発声状態を問い合わせる
         /// </summary>
         /// <returns>true 発声中 / false 発声していない、または通信失敗</returns>
-        public async Task<bool> CheckNowPlaying(CancellationToken token)
+        public async Task<bool> CheckNowPlaying(CancellationToken cancellationToken = default(CancellationToken))
         {
             return await CheckAsync(ns =>
             {
@@ -36,7 +36,7 @@ namespace UnityBoyomichanClient
                     var br = new BinaryReader(ns);
                     return br.ReadByte() > 0;
                 }
-            }, false, token);
+            }, false, cancellationToken);
         }
 
         /// <summary>
@@ -50,7 +50,7 @@ namespace UnityBoyomichanClient
         /// <param name="token">CancellationToken</param>
         /// <returns></returns>
         public async Task TalkAsync(string message, int speed, int pitch, int volume, VoiceType voiceType,
-            CancellationToken token = default(CancellationToken))
+            CancellationToken cancellationToken  = default(CancellationToken))
         {
             await SendAsync(ns =>
             {
@@ -68,13 +68,13 @@ namespace UnityBoyomichanClient
                     bw.Write((int) lengh); //文字列のbyte配列の長さ
                     bw.Write(encoded); //文字列のbyte配列
                 }
-            }, token);
+            }, cancellationToken);
         }
 
         /// <summary>
         /// 読み上げ一時停止
         /// </summary>
-        public async Task PauseAsync(CancellationToken token = default(CancellationToken))
+        public async Task PauseAsync(CancellationToken cancellationToken  = default(CancellationToken))
         {
             await SendAsync(ns =>
             {
@@ -82,13 +82,13 @@ namespace UnityBoyomichanClient
                 {
                     bw.Write((short) 0x0010);
                 }
-            }, token);
+            }, cancellationToken);
         }
 
         /// <summary>
         /// 読み上げ再開
         /// </summary>
-        public async Task ResumeAsync(CancellationToken token = default(CancellationToken))
+        public async Task ResumeAsync(CancellationToken cancellationToken  = default(CancellationToken))
         {
             await SendAsync(ns =>
             {
@@ -96,13 +96,13 @@ namespace UnityBoyomichanClient
                 {
                     bw.Write((short) 0x0020);
                 }
-            }, token);
+            }, cancellationToken);
         }
 
         /// <summary>
         /// 現在の行をスキップし次の行へ
         /// </summary>
-        public async Task SkipAsync(CancellationToken token = default(CancellationToken))
+        public async Task SkipAsync(CancellationToken cancellationToken  = default(CancellationToken))
         {
             await SendAsync(ns =>
             {
@@ -110,13 +110,13 @@ namespace UnityBoyomichanClient
                 {
                     bw.Write((short) 0x0030);
                 }
-            }, token);
+            }, cancellationToken);
         }
 
         /// <summary>
         /// 残りタスクを全てキャンセル
         /// </summary>
-        public async Task ClearAsync(CancellationToken token = default(CancellationToken))
+        public async Task ClearAsync(CancellationToken cancellationToken  = default(CancellationToken))
         {
             await SendAsync(ns =>
             {
@@ -124,14 +124,14 @@ namespace UnityBoyomichanClient
                 {
                     bw.Write((short) 0x0040);
                 }
-            }, token);
+            }, cancellationToken);
         }
 
         /// <summary>
         /// 一時停止状態の確認
         /// </summary>
         /// <returns>true 一時停止中 / false 一時停止していない、または通信失敗</returns>
-        public async Task<bool> CheckPauseAsync(CancellationToken token)
+        public async Task<bool> CheckPauseAsync(CancellationToken cancellationToken )
         {
             return await CheckAsync(ns =>
             {
@@ -143,14 +143,14 @@ namespace UnityBoyomichanClient
                     var br = new BinaryReader(ns);
                     return br.ReadByte() > 0;
                 }
-            }, false, token);
+            }, false, cancellationToken);
         }
 
         /// <summary>
         /// 残りタスク数取得
         /// </summary>
         /// <returns>残りのタスク数、通信失敗時は-1</returns>
-        public async Task<int> GetTaskCountAsync(CancellationToken token)
+        public async Task<int> GetTaskCountAsync(CancellationToken cancellationToken )
         {
             return await CheckAsync(ns =>
             {
@@ -162,12 +162,12 @@ namespace UnityBoyomichanClient
                     var br = new BinaryReader(ns);
                     return br.ReadInt32();
                 }
-            }, -1, token);
+            }, -1, cancellationToken);
         }
 
 
         private async Task<T> CheckAsync<T>(Func<NetworkStream, T> func, T defaultValue,
-            CancellationToken token = default(CancellationToken))
+            CancellationToken cancellationToken  = default(CancellationToken))
         {
             try
             {
@@ -178,13 +178,13 @@ namespace UnityBoyomichanClient
                         tcpClient.SendTimeout = 1;
                         tcpClient.ReceiveTimeout = 1;
                         tcpClient.Connect(_host, _port);
-                        token.ThrowIfCancellationRequested();
+                        cancellationToken.ThrowIfCancellationRequested();
                         using (var ns = tcpClient.GetStream())
                         {
                             return func(ns);
                         }
                     }
-                }, token);
+                }, cancellationToken);
             }
             catch (TaskCanceledException)
             {
@@ -201,7 +201,7 @@ namespace UnityBoyomichanClient
             }
         }
 
-        private async Task SendAsync(Action<NetworkStream> act, CancellationToken token)
+        private async Task SendAsync(Action<NetworkStream> act, CancellationToken cancellationToken )
         {
             try
             {
@@ -212,13 +212,13 @@ namespace UnityBoyomichanClient
                         tcpClient.SendTimeout = 1;
                         tcpClient.ReceiveTimeout = 1;
                         tcpClient.Connect(_host, _port);
-                        token.ThrowIfCancellationRequested();
+                        cancellationToken.ThrowIfCancellationRequested();
                         using (var ns = tcpClient.GetStream())
                         {
                             act(ns);
                         }
                     }
-                }, token);
+                }, cancellationToken);
             }
             catch (TaskCanceledException)
             {

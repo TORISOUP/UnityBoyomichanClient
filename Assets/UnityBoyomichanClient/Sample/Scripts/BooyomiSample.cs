@@ -30,12 +30,12 @@ namespace UnityBoyomichanClient.Sample
         [SerializeField] private int _port = 50001;
 
         private CancellationTokenSource _cancellationTokenSource;
-        private BoyomiClient _boyomiClient;
+        private BoyomichanClient _boyomichanClient;
 
         private void Start()
         {
             _cancellationTokenSource = new CancellationTokenSource();
-            _boyomiClient = new BoyomiClient(_host, _port);
+            _boyomichanClient = new BoyomichanClient(_host, _port);
 
             _voiceTypeDropdown.options =
                 Enum.GetNames(typeof(VoiceType)).Select(x => new Dropdown.OptionData(x)).ToList();
@@ -47,25 +47,25 @@ namespace UnityBoyomichanClient.Sample
             // Pause
             _pauseButton.onClick.AddListener(() =>
             {
-                _boyomiClient.PauseAsync(_cancellationTokenSource.Token).FireAndForget();
+                _boyomichanClient.PauseAsync(_cancellationTokenSource.Token).FireAndForget();
             });
 
             // Resume
             _resumeButton.onClick.AddListener(() =>
             {
-                _boyomiClient.ResumeAsync(_cancellationTokenSource.Token).FireAndForget();
+                _boyomichanClient.ResumeAsync(_cancellationTokenSource.Token).FireAndForget();
             });
 
             // Skip
             _skipButton.onClick.AddListener(() =>
             {
-                _boyomiClient.SkipAsync(_cancellationTokenSource.Token).FireAndForget();
+                _boyomichanClient.SkipAsync(_cancellationTokenSource.Token).FireAndForget();
             });
 
             // Clear
             _clearButton.onClick.AddListener(() =>
             {
-                _boyomiClient.ClearAsync(_cancellationTokenSource.Token).FireAndForget();
+                _boyomichanClient.ClearAsync(_cancellationTokenSource.Token).FireAndForget();
             });
 
             // Speech
@@ -78,7 +78,7 @@ namespace UnityBoyomichanClient.Sample
                 var pitch = _pitchInputField.text.SafeParse();
                 var volume = _volumeInputField.text.SafeParse();
                 var type = (VoiceType) _voiceTypeDropdown.value;
-                _boyomiClient.TalkAsync(text, speed, pitch, volume, type, _cancellationTokenSource.Token)
+                _boyomichanClient.TalkAsync(text, speed, pitch, volume, type, _cancellationTokenSource.Token)
                     .FireAndForget();
             });
         }
@@ -89,7 +89,7 @@ namespace UnityBoyomichanClient.Sample
             while (!token.IsCancellationRequested)
             {
                 // 残りのタスク数取得
-                var count = await _boyomiClient.GetTaskCountAsync(token);
+                var count = await _boyomichanClient.GetTaskCountAsync(token);
                 _taskCounText.text = $"Task count: {count}";
                 await Task.Delay(TimeSpan.FromMilliseconds(500), token);
             }
@@ -100,7 +100,7 @@ namespace UnityBoyomichanClient.Sample
             while (!token.IsCancellationRequested)
             {
                 // 発声中か
-                var isSpeeching = await _boyomiClient.CheckNowPlaying(token);
+                var isSpeeching = await _boyomichanClient.CheckNowPlaying(token);
                 _playingText.text = isSpeeching ? "Speeching" : "Idle";
                 await Task.Delay(TimeSpan.FromMilliseconds(500), token);
             }
@@ -111,7 +111,7 @@ namespace UnityBoyomichanClient.Sample
             while (!token.IsCancellationRequested)
             {
                 // Pause中か
-                var isPause = await _boyomiClient.CheckPauseAsync(token);
+                var isPause = await _boyomichanClient.CheckPauseAsync(token);
                 _statusText.text = isPause ? "Pause" : "Idle";
                 await Task.Delay(TimeSpan.FromMilliseconds(500), token);
             }
@@ -120,7 +120,7 @@ namespace UnityBoyomichanClient.Sample
 
         private void OnDestroy()
         {
-            _boyomiClient = null;
+            _boyomichanClient = null;
             _cancellationTokenSource.Cancel();
             _cancellationTokenSource.Dispose();
         }
