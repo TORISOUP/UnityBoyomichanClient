@@ -27,9 +27,9 @@ private async Task SpeechSample()
 
     await _boyomiClient.TalkAsync(
         message: "これはサンプルです",
-        speed: -1,
-        volume: -1,
-        pitch: -1,
+        speed: -1, // -1で棒読みちゃん側の設定
+        volume: -1,// -1で棒読みちゃん側の設定
+        pitch: -1, // -1で棒読みちゃん側の設定
         voiceType: VoiceType.DefaultVoice,
         cancellationToken: default(CancellationToken));
 
