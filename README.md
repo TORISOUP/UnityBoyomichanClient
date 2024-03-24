@@ -1,11 +1,13 @@
 # UnityBoyomichanClient
 
 UnityBoyomichanClientは、[棒読みちゃん](http://chi.usamimi.info/Program/Application/BouyomiChan/)をUnityから操作するためのライブラリです。  
-TCP Socketを用いて通信を行います。
+TCP SocketまたはHTTPを用いて通信を行います。
 
 # 動作環境
 
-* .NET 4.x以降が利用可能なUnity
+* Unity 2022 LTS以降が推奨
+* [UniTask](https://github.com/Cysharp/UniTask)
+
 
 # 機能一覧
 
@@ -23,7 +25,11 @@ TCP Socketを用いて通信を行います。
 ```cs
 private async Task SpeechSample()
 {
-    var _boyomiClient = new BoyomichanClient("127.0.0.1", 50001);
+    // TCP版
+    var _boyomiClient = new TcpBoyomichanClient("127.0.0.1", 50001);
+
+    // HTTP版
+    // var _boyomiClient = new HttpBoyomichanClient("localhost", 50080);
 
     await _boyomiClient.TalkAsync(
         message: "これはサンプルです",
@@ -40,6 +46,7 @@ private async Task SpeechSample()
     }
 
     Debug.Log("Done");
+    _boyomiClient.Dispose();
 }
 ```
 
@@ -48,3 +55,29 @@ private async Task SpeechSample()
 
 MIT
 
+
+# 使用ライブラリライセンス表記
+
+### UniTask
+
+The MIT License (MIT)
+
+Copyright (c) 2019 Yoshifumi Kawai / Cysharp, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
