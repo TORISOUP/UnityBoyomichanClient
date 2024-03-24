@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
-using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 using UnityEngine.Networking;
 
 namespace UnityBoyomichanClient
@@ -10,8 +10,8 @@ namespace UnityBoyomichanClient
     {
         private readonly string _host;
         private readonly int _port;
-
         private string BaseUrl => $"http://{_host}:{_port}";
+        private readonly CancellationTokenSource _disposableCts = new();
 
         public HttpBoyomichanClient(string host, int port)
         {
@@ -21,13 +21,16 @@ namespace UnityBoyomichanClient
 
         public async UniTask<bool> CheckNowPlayingAsync(CancellationToken cancellationToken = default)
         {
+            var ct = CancellationTokenSource
+                .CreateLinkedTokenSource(_disposableCts.Token, cancellationToken).Token;
+
             using var uwr = UnityWebRequest.Get($"{BaseUrl}/getnowplaying");
             try
             {
-                await uwr.SendWebRequest().ToUniTask(cancellationToken: cancellationToken);
+                await uwr.SendWebRequest().ToUniTask(cancellationToken: ct);
 
                 // {"nowPlaying":[t]rue}
-                return uwr.downloadHandler.text[15] == 't';
+                return uwr.downloadHandler.text[14] == 't';
             }
             catch (OperationCanceledException)
             {
@@ -42,42 +45,150 @@ namespace UnityBoyomichanClient
             VoiceType voiceType,
             CancellationToken cancellationToken = default)
         {
-            throw new System.NotImplementedException();
+            var ct = CancellationTokenSource
+                .CreateLinkedTokenSource(_disposableCts.Token, cancellationToken).Token;
+
+            using var uwr =
+                UnityWebRequest.Get(
+                    $"{BaseUrl}/talk?text={message}&voice={(int)voiceType}&speed={speed}&tone={pitch}&volume={volume}");
+            try
+            {
+                await uwr.SendWebRequest().ToUniTask(cancellationToken: ct);
+                var dto = JsonUtility.FromJson<TaskIdDto>(uwr.downloadHandler.text);
+                return new TaskId(dto.taskId);
+            }
+            catch (OperationCanceledException)
+            {
+                return new TaskId(1);
+            }
         }
 
-        public UniTask PauseAsync(CancellationToken cancellationToken = default)
+        public async UniTask PauseAsync(CancellationToken cancellationToken = default)
         {
-            throw new System.NotImplementedException();
+            var ct = CancellationTokenSource
+                .CreateLinkedTokenSource(_disposableCts.Token, cancellationToken).Token;
+
+            using var uwr = UnityWebRequest.Get($"{BaseUrl}/pause");
+            try
+            {
+                await uwr.SendWebRequest().ToUniTask(cancellationToken: ct);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
         }
 
-        public UniTask ResumeAsync(CancellationToken cancellationToken = default)
+        public async UniTask ResumeAsync(CancellationToken cancellationToken = default)
         {
-            throw new System.NotImplementedException();
+            var ct = CancellationTokenSource
+                .CreateLinkedTokenSource(_disposableCts.Token, cancellationToken).Token;
+            using var uwr = UnityWebRequest.Get($"{BaseUrl}/resume");
+            try
+            {
+                await uwr.SendWebRequest().ToUniTask(cancellationToken: ct);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
         }
 
-        public UniTask SkipAsync(CancellationToken cancellationToken = default)
+        public async UniTask SkipAsync(CancellationToken cancellationToken = default)
         {
-            throw new System.NotImplementedException();
+            var ct = CancellationTokenSource
+                .CreateLinkedTokenSource(_disposableCts.Token, cancellationToken).Token;
+
+            using var uwr = UnityWebRequest.Get($"{BaseUrl}/skip");
+            try
+            {
+                await uwr.SendWebRequest().ToUniTask(cancellationToken: ct);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
         }
 
-        public UniTask ClearAsync(CancellationToken cancellationToken = default)
+        public async UniTask ClearAsync(CancellationToken cancellationToken = default)
         {
-            throw new System.NotImplementedException();
+            var ct = CancellationTokenSource
+                .CreateLinkedTokenSource(_disposableCts.Token, cancellationToken).Token;
+
+            using var uwr = UnityWebRequest.Get($"{BaseUrl}/clear");
+            try
+            {
+                await uwr.SendWebRequest().ToUniTask(cancellationToken: ct);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
         }
 
-        public UniTask<bool> CheckPauseAsync(CancellationToken cancellationToken)
+        public async UniTask<bool> CheckPauseAsync(CancellationToken cancellationToken)
         {
-            throw new System.NotImplementedException();
+            var ct = CancellationTokenSource
+                .CreateLinkedTokenSource(_disposableCts.Token, cancellationToken).Token;
+
+            using var uwr = UnityWebRequest.Get($"{BaseUrl}/getpause");
+            try
+            {
+                await uwr.SendWebRequest().ToUniTask(cancellationToken: ct);
+
+                // {"pause":[t]rue}
+                return uwr.downloadHandler.text[10] == 't';
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
         }
 
-        public UniTask<int> GetTaskCountAsync(CancellationToken cancellationToken)
+        public async UniTask<int> GetTaskCountAsync(CancellationToken cancellationToken)
         {
-            throw new System.NotImplementedException();
+            var ct = CancellationTokenSource
+                .CreateLinkedTokenSource(_disposableCts.Token, cancellationToken).Token;
+
+            using var uwr = UnityWebRequest.Get($"{BaseUrl}/getnowtaskid");
+            try
+            {
+                await uwr.SendWebRequest().ToUniTask(cancellationToken: ct);
+                var dto = JsonUtility.FromJson<NowTaskIdDto>(uwr.downloadHandler.text);
+                return dto.nowTaskId;
+            }
+            catch (OperationCanceledException)
+            {
+                return -1;
+            }
         }
 
         public void Dispose()
         {
-            // TODO release managed resources here
+            _disposableCts.Cancel();
+            _disposableCts.Dispose();
+        }
+
+        internal struct TaskIdDto
+        {
+            public int taskId;
+        }
+
+        internal struct NowTaskIdDto
+        {
+            public int nowTaskId;
         }
     }
 }
